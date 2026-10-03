@@ -13,18 +13,43 @@ Tên cột của sheet "Experiments" (giữ nguyên, đúng thứ tự mẫu):
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
+
+
+def _clean(v):
+    """Chuyển sang kiểu JSON chuẩn: tuple -> list, NaN/inf -> None, số numpy/torch -> số Python."""
+    if isinstance(v, dict):
+        return {k: _clean(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple)):
+        return [_clean(x) for x in v]
+    if hasattr(v, "item") and not isinstance(v, (str, bytes)):
+        v = v.item()
+    if isinstance(v, float) and not math.isfinite(v):
+        return None
+    return v
 
 
 def save_result(result: dict, results_dir: str = "../results") -> str:
     """Ghi result["cfg"], result["history"], result["summary"] (KHÔNG ghi best_state) ra
-    <results_dir>/<exp_id>.json. Trả về đường dẫn file. Tạo thư mục nếu chưa có."""
-    raise NotImplementedError  # TODO
+    <results_dir>/<exp_id>.json. Trả về đường dẫn file. Tạo thư mục nếu chưa có.
+    NaN/inf (lần chạy phân kỳ) được ghi thành null để file là JSON hợp lệ."""
+    out = Path(results_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    payload = {k: _clean(result[k]) for k in ("cfg", "history", "summary")}
+    path = out / f"{result['cfg']['exp_id']}.json"
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=1)
+    return str(path)
 
 
 def load_results(results_dir: str = "../results") -> list[dict]:
     """Đọc mọi file *.json trong results_dir, trả về danh sách dict (sắp theo exp_id)."""
-    raise NotImplementedError  # TODO
+    results = []
+    for p in sorted(Path(results_dir).glob("*.json")):
+        with open(p, encoding="utf-8") as f:
+            results.append(json.load(f))
+    return sorted(results, key=lambda r: r["cfg"]["exp_id"])
 
 
 def to_row(result: dict, eval_scores: dict | None = None, notes: str = "") -> dict:
