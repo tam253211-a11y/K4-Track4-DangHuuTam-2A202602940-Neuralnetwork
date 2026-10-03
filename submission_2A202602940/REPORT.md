@@ -64,15 +64,15 @@ Mỗi thí nghiệm đổi **một** yếu tố so với `base-s1` (lr 0,3, seed
 
 | exp_id | đổi gì | tham số | số bước | best epoch | best val loss | val acc | val macro-F1 | Δ so với baseline TB | s/epoch | peak MB |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `base-s1` | — | 47 879 | 14 540 | 19 | 0,2318 | 0,9090 | 0,8573 | −0,0034 (trong nhiễu) | 1,29 | 199 |
-| `hp-wide` | hidden 512-256 | 161 287 | 14 540 | 20 | 0,1998 | 0,9226 | **0,8747** | **+0,0140** | 1,47 | 216 |
-| `hp-ep40` | 40 epoch | 47 879 | 29 080 | 32 | 0,1995 | 0,9232 | **0,8733** | **+0,0126** | 1,33 | 199 |
+| `base-s1` | — | 47 879 | 14 540 | 19 | 0,2318 | 0,9090 | 0,8573 | −0,0034 (trong nhiễu) | 1,34 | 203 |
+| `hp-wide` | hidden 512-256 | 161 287 | 14 540 | 20 | 0,1998 | 0,9226 | **0,8747** | **+0,0140** | 1,37 | 220 |
+| `hp-ep40` | 40 epoch | 47 879 | 29 080 | 32 | 0,1995 | 0,9232 | **0,8733** | **+0,0126** | 1,37 | 203 |
 
 ![](figures/compare_hparam.png)
 
-- **`hp-wide` — khớp dự đoán.** Train loss thấp hơn ở mọi epoch (epoch 20: 0,1669 so với 0,2057) và val loss cũng thấp hơn → baseline đúng là **thiếu năng lực**; vì chưa quá khớp, phần khớp thêm chuyển thành val tốt hơn (+0,014 > 2σ). Chi phí thời gian chỉ +14% cho 3,4 lần số tham số: mạng còn nhỏ, thời gian mỗi bước chủ yếu là chi phí gọi kernel, không tỉ lệ với số phép nhân.
+- **`hp-wide` — khớp dự đoán.** Train loss thấp hơn ở mọi epoch (epoch 20: 0,1669 so với 0,2057) và val loss cũng thấp hơn → baseline đúng là **thiếu năng lực**; vì chưa quá khớp, phần khớp thêm chuyển thành val tốt hơn (+0,014 > 2σ). Chi phí thời gian gần như không đổi (1,37 so với 1,34 s/epoch, +2%) dù số tham số gấp 3,4 lần; bộ nhớ đỉnh +17 MB: mạng còn nhỏ, thời gian mỗi bước chủ yếu là chi phí gọi kernel, không tỉ lệ với số phép nhân.
 - **`hp-ep40` — khớp dự đoán.** 20 epoch đầu trùng khít `base-s1` (cùng seed, cùng thứ tự lô) nên so sánh công bằng. Gấp đôi số bước cập nhật đưa val loss xuống 0,1995 (+0,0126 > 2σ). Sau epoch ≈ 32 val loss đi ngang (0,20–0,22) trong khi train loss vẫn giảm → khoảng cách train–val nới từ ≈ 0,03 lên ≈ 0,036: M-base bắt đầu bão hoà với lr cố định.
-- **So hai yếu tố:** 0,8747 vs 0,8733 chênh 0,0014 < 2σ → **chưa kết luận được** cái nào tốt hơn (dự đoán "wide tốt hơn" chưa được xác nhận). Tuy nhiên `hp-wide` đạt mức đó với một nửa số bước (≈ 29 s so với ≈ 53 s mỗi lần chạy).
+- **So hai yếu tố:** 0,8747 vs 0,8733 chênh 0,0014 < 2σ → **chưa kết luận được** cái nào tốt hơn (dự đoán "wide tốt hơn" chưa được xác nhận). Tuy nhiên `hp-wide` đạt mức đó với một nửa số bước (≈ 27 s so với ≈ 55 s mỗi lần chạy).
 
 ### 3.4 Cấu hình cuối: M-wide + 40 epoch (`hp-wide-ep40-s1..3`)
 
@@ -83,7 +83,7 @@ Kết hợp hai yếu tố (cùng chủ đề hyper-parameter; ghi rõ trong `de
 | `hp-wide-ep40-s1` | **38** | **0,1677** | 0,9366 | **0,8952** |
 | `hp-wide-ep40-s2` | 35 | 0,1742 | 0,9327 | 0,8873 |
 | `hp-wide-ep40-s3` | 39 | 0,1796 | 0,9322 | 0,8875 |
-| **TB ± σ** | | | | **0,8900 ± 0,0046** |
+| **TB ± σ** | | | | **0,8900 ± 0,0045** |
 
 ![](figures/compare_final.png)
 
@@ -101,7 +101,7 @@ Số lấy từ `eval_result.json` (cấu hình cuối) và `eval_baseline/eval_
 | Cấu hình cuối cùng | `hp-wide-ep40-s1` (best epoch 38) | 1 | 0,8952 | **0,8946** | 0,9356 |
 
 - **Cấu hình cuối:** M-wide (54→512→256→7) + 40 epoch, chọn bằng val (mục 3.4).
-- **Cải thiện trên eval:** +0,0382 macro-F1, +0,0267 accuracy. Trên val, độ nhiễu seed là σ = 0,0030 (baseline) / 0,0046 (cấu hình cuối) và mức cải thiện trung bình 3 seed là +0,0293, nên cải thiện trên eval phù hợp với một khác biệt thật. Chưa đo σ trên eval (chỉ đánh giá 1 mô hình mỗi cấu hình).
+- **Cải thiện trên eval:** +0,0382 macro-F1, +0,0267 accuracy. Trên val, độ nhiễu seed là σ = 0,0030 (baseline) / 0,0045 (cấu hình cuối) và mức cải thiện trung bình 3 seed là +0,0293, nên cải thiện trên eval phù hợp với một khác biệt thật. Chưa đo σ trên eval (chỉ đánh giá 1 mô hình mỗi cấu hình).
 - **Val và eval rất gần nhau:** eval − val = −0,0009 (baseline) và −0,0006 (cấu hình cuối), phù hợp với ghi chú của GUIDE (≤ 0,005): val được tách phân tầng từ cùng phân phối với eval và không bị dùng để huấn luyện.
 
 ### 4.1 Phân tích lỗi theo lớp
@@ -142,7 +142,7 @@ Ma trận nhầm lẫn của cấu hình cuối (hàng = thật, cột = dự đ
 
 Bài chỉ thử chủ đề hyper-parameter nên các câu 1–5 (optimizer, dropout, clipping, mixed precision, init) không thuộc phạm vi; dưới đây là câu hỏi của chủ đề đã thử và câu 6 (bắt buộc).
 
-**Hyper-parameter — tăng độ rộng hay tăng số epoch?** Khi baseline *chưa khớp* (train ≈ val, best epoch ở cuối), cả hai đều giúp và vượt nhiễu (+0,014 / +0,013 so với 2σ = 0,006), nhưng không khác nhau có ý nghĩa ở 1 seed. Khác biệt nằm ở chi phí và cơ chế: độ rộng tăng *năng lực* trong cùng số bước (rẻ hơn về thời gian), thêm epoch tăng *số bước cập nhật* cho mô hình cũ và bắt đầu bão hoà sau ≈ 32 epoch. Kết hợp cả hai cho kết quả tốt nhất (0,8900 ± 0,0046 trên val, 0,8946 trên eval) vì chúng giải quyết hai giới hạn khác nhau. Learning rate quan trọng hơn cả hai: trong cùng 20 epoch, đổi lr từ 0,003 lên 0,3 thay đổi val macro-F1 tới 0,19.
+**Hyper-parameter — tăng độ rộng hay tăng số epoch?** Khi baseline *chưa khớp* (train ≈ val, best epoch ở cuối), cả hai đều giúp và vượt nhiễu (+0,014 / +0,013 so với 2σ = 0,006), nhưng không khác nhau có ý nghĩa ở 1 seed. Khác biệt nằm ở chi phí và cơ chế: độ rộng tăng *năng lực* trong cùng số bước (rẻ hơn về thời gian), thêm epoch tăng *số bước cập nhật* cho mô hình cũ và bắt đầu bão hoà sau ≈ 32 epoch. Kết hợp cả hai cho kết quả tốt nhất (0,8900 ± 0,0045 trên val, 0,8946 trên eval) vì chúng giải quyết hai giới hạn khác nhau. Learning rate quan trọng hơn cả hai: trong cùng 20 epoch, đổi lr từ 0,003 lên 0,3 thay đổi val macro-F1 tới 0,19.
 
 **6. Một mạng có loss không giảm sau 2 000 bước — 3 phép kiểm tra đầu tiên:**
 1. **Loss bước 0 so với ln C (= ln 7 ≈ 1,946).** Rẻ nhất, chạy trước khi train. Nếu ≈ ln 7 mà không giảm → nghi lr quá nhỏ / gradient không chảy; nếu cao hơn nhiều → điểm số lớp cuối quá lớn hoặc đầu vào chưa chuẩn hoá. Ở bài này đo 2,27 (lệch nhỏ, giải thích được) nên loại được lỗi chuẩn hoá và khởi tạo.
@@ -158,4 +158,4 @@ Bài chỉ thử chủ đề hyper-parameter nên các câu 1–5 (optimizer, dr
 ## 7. Phụ lục
 
 - **File nộp:** `REPORT.md`, `experiments.xlsx` (13 dòng; sheet Seeds = `base-s1..3`), `predictions_eval.csv` (cấu hình cuối, seed 1), `eval_result.json`, `eval_baseline/` (dự đoán và kết quả eval của baseline — bằng chứng, không phải file nộp chính), `figures/` (13 ảnh `<exp_id>.png` + 4 ảnh `compare_baseline-lr.png`, `compare_baseline-seeds.png`, `compare_hparam.png`, `compare_final.png`), `results/` (13 file `<exp_id>.json`), `code/` (`lab.ipynb`, `data.py`, `model.py`, `optimizer.py`, `train.py`, `plots.py`, `results_table.py`).
-- **Thời gian chạy ước tính** (T4): 13 lần chạy, ≈ 1,3–1,5 s/epoch; 9 lần × 20 epoch (`base-lr*`, `base-s*`, `hp-wide`) + 4 lần × 40 epoch (`hp-ep40`, `hp-wide-ep40-s*`) = 340 epoch ≈ **7–8 phút** huấn luyện, cộng nạp dữ liệu và đánh giá ≈ 10 phút cho *Restart & Run All*.
+- **Thời gian chạy ước tính** (T4): 13 lần chạy, ≈ 1,33–1,46 s/epoch; 9 lần × 20 epoch (`base-lr*`, `base-s*`, `hp-wide`) + 4 lần × 40 epoch (`hp-ep40`, `hp-wide-ep40-s*`) = 340 epoch ≈ **7–8 phút** huấn luyện, cộng nạp dữ liệu và đánh giá ≈ 10 phút cho *Restart & Run All*.
