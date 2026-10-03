@@ -123,7 +123,7 @@ def iterate_batches(X, y, batch_size: int, generator: torch.Generator | None = N
     """Generator trả về từng cặp (xb, yb), thay cho DataLoader.
 
     Lô cuối: mặc định GIỮ lô cuối nhỏ hơn batch_size (drop_last=False), để mỗi epoch dùng đủ mọi mẫu train.
-    Với 371 847 mẫu và batch 512: 726 lô đủ + 1 lô 127 mẫu = 727 bước/epoch. Loss lấy trung bình trên lô nên
+    Với 371 847 mẫu và batch 512: 726 lô đủ + 1 lô 135 mẫu = 727 bước/epoch. Loss lấy trung bình trên lô nên
     lô nhỏ không làm sai thang đo, chỉ có gradient nhiễu hơn một chút ở một bước trong 727.
     Xáo lại mỗi lần gọi (mỗi epoch). Truyền `generator` cùng device với X để thứ tự lặp lại được theo seed.
     """
